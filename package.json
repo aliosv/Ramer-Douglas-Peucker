@@ -1,4 +1,5 @@
 {
+  "name": "Ramer-Douglas-Peucker",
   "devDependencies": {
 	"mocha": "*",
 	"ym": "*"
