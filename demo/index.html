@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Ramer-Douglas-Peucker</title>
+    <style type="text/css">
+        canvas {
+            border: 1px solid #000;
+            cursor: crosshair;
+        }
+    </style>
+    <script src="../../node_modules/ym/modules.js"></script>
+    <script src="../index.js"></script>
+</head>
+<body>
+    <h1>Ramer-Douglas-Peucker demo</h1>
+    <p>Draw polyline below</p>
+    <canvas width="400" height="400"></canvas>
+    <div>
+        Tolerance: <input type="range" value="0" min="0" max="100"/>
+    </div>
+
+    <script>
+        var Canvas = function(canvas) {
+                    this.domElem = canvas;
+                    this.ctx = canvas.getContext('2d');
+                },
+                canvas = new Canvas(document.querySelector('canvas')),
+                toleranceInput = document.querySelector('input'),
+                mouseMoveHandler = function(e) {
+                    var point = [e.pageX - e.target.offsetLeft, e.pageY - e.target.offsetTop];
+
+                    polyline.push(point);
+                    canvas.drawPoint(point);
+                    polyline.length > 1 && canvas.drawLine(polyline.slice(-2));
+                },
+                polyline;
+
+        Canvas.prototype.clear = function() {
+            this.ctx.clearRect(0, 0, this.domElem.width, this.domElem.height);
+
+            return this;
+        };
+        Canvas.prototype.drawLine = function(points) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(points[0][0], points[0][1]);
+            this.ctx.lineTo(points[1][0], points[1][1]);
+            this.ctx.strokeStyle = '#000000';
+            this.ctx.stroke();
+            this.ctx.closePath();
+
+            return this;
+        };
+        Canvas.prototype.drawPoint = function(point) {
+            this.ctx.beginPath();
+            this.ctx.arc(point[0], point[1], 3, 0, 360);
+            this.ctx.strokeStyle = '#ff0000';
+            this.ctx.stroke();
+            this.ctx.closePath();
+
+            return this;
+        };
+        Canvas.prototype.drawPolyline = function(points) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(points[0][0], points[0][1]);
+
+            for(var i = 1; i < points.length; i += 1) {
+                this.ctx.lineTo(points[i][0], points[i][1]);
+            }
+
+            this.ctx.strokeStyle = '#000000';
+            this.ctx.stroke();
+            this.ctx.closePath();
+
+            points.forEach(function(point) {
+                canvas.drawPoint(point);
+            });
+
+            return this;
+        };
+
+        modules.require(['ramer-douglas-peucker-algorithm'], function(algorithm) {
+            canvas.domElem.addEventListener('mousedown', function() {
+                polyline = [];
+
+                canvas.clear().domElem.addEventListener('mousemove', mouseMoveHandler);
+            });
+
+            canvas.domElem.addEventListener('mouseup', function() {
+                canvas.domElem.removeEventListener('mousemove', mouseMoveHandler);
+                canvas.clear().drawPolyline(algorithm(polyline, +toleranceInput.value));
+            });
+
+            toleranceInput.addEventListener('change', function() {
+                if(polyline && polyline.length) {
+                    canvas.clear().drawPolyline(algorithm(polyline, +toleranceInput.value));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
